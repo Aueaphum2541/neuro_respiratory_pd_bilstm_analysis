@@ -1,0 +1,28 @@
+name: Inspect real PD respiratory dataset
+
+on:
+  push:
+    branches: [real-pd-bilstm-20260915]
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas
+      - name: Inspect one public nasal-airflow file
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          u='https://raw.githubusercontent.com/michalandelman/PD-classification-data/main/PD/snifferdata_PD01.csv'
+          d=pd.read_csv(u,nrows=30)
+          print('COLUMNS', list(d.columns))
+          print('DTYPES')
+          print(d.dtypes)
+          print('HEAD')
+          print(d.head(10).to_string())
+          PY
