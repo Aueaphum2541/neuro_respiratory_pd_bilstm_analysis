@@ -1,0 +1,53 @@
+name: UCI308 Strong Real-Data Benchmark
+
+on:
+  push:
+    branches:
+      - uci308-strong-benchmark-20260915
+    paths:
+      - benchmark_uci308_strong.py
+      - .github/workflows/uci308-strong-benchmark.yml
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install scientific stack
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas scipy scikit-learn matplotlib xgboost requests
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Run matched real-data benchmark
+        run: |
+          python benchmark_uci308_strong.py
+
+      - name: Package results
+        if: always()
+        run: |
+          if [ -d results ]; then
+            zip -r uci308_strong_results.zip results benchmark_uci308_strong.py
+          fi
+
+      - name: Upload results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uci308-strong-results
+          path: |
+            results/
+            benchmark_uci308_strong.py
+            uci308_strong_results.zip
+          if-no-files-found: warn
+          retention-days: 30
