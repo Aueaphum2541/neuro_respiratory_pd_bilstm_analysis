@@ -1,0 +1,34 @@
+name: Train real PD respiratory BiLSTM benchmark
+
+on:
+  push:
+    branches: [real-pd-bilstm-20260915]
+    paths:
+      - 'real_pd_bilstm_benchmark.py'
+      - '.github/workflows/train_real_pd_bilstm.yml'
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install scientific stack
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas scipy scikit-learn matplotlib xgboost requests
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Run subject-grouped real-data benchmark
+        run: python real_pd_bilstm_benchmark.py
+      - name: Upload reproducibility artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-pd-bilstm-results
+          path: real_pd_results/
+          if-no-files-found: warn
+          retention-days: 30
