@@ -1,0 +1,43 @@
+name: UCI308 Strong Benchmark
+
+on:
+  push:
+    branches: [uci308-strong-benchmark]
+    paths:
+      - 'experiments/uci308_strong/**'
+      - '.github/workflows/uci308-strong-benchmark.yml'
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: experiments/uci308_strong/requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r experiments/uci308_strong/requirements.txt
+          pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+      - name: Run benchmark
+        run: python experiments/uci308_strong/benchmark.py
+      - name: Archive result directory
+        if: always()
+        run: |
+          cd experiments/uci308_strong
+          zip -r uci308_strong_results.zip results || true
+      - name: Upload benchmark artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uci308-strong-results
+          path: |
+            experiments/uci308_strong/results/**
+            experiments/uci308_strong/uci308_strong_results.zip
+          if-no-files-found: warn
+          retention-days: 30
